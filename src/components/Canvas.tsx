@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './Canvas.css';
-import { Sparkles, Package, Settings, Upload, Plus, Minus, Palette } from 'lucide-react';
+import { Sparkles, Package, Settings, Upload, Plus, Minus } from 'lucide-react';
 import ComponentModal from './ComponentModal';
 import GeneratedComponent from './GeneratedComponent';
 import DesignSystemModal from './DesignSystemModal';
@@ -29,6 +29,7 @@ const Canvas: React.FC = () => {
     prompt: string;
     position: { x: number; y: number };
     size: { width: number; height: number };
+    autoResize?: boolean;
   }>>([]);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [editingComponent, setEditingComponent] = useState<string | null>(null);
@@ -346,7 +347,7 @@ const Canvas: React.FC = () => {
         // Update existing component
         setComponents(prev => prev.map(comp => 
           comp.id === editingComponent 
-            ? { ...comp, code, prompt, name: generateComponentName(prompt) }
+            ? { ...comp, code, prompt, name: generateComponentName(prompt), autoResize: false }
             : comp
         ));
         setEditingComponent(null);
@@ -358,7 +359,8 @@ const Canvas: React.FC = () => {
           name: generateComponentName(prompt),
           prompt,
           position: { x: 100, y: 100 },
-          size: { width: 300, height: 200 }
+          size: { width: 300, height: 200 },
+          autoResize: true
         };
         setComponents(prev => [...prev, newComponent]);
         setSelectedComponentId(newComponent.id);
@@ -391,7 +393,8 @@ const Canvas: React.FC = () => {
         position: { 
           x: component.position.x + 20, 
           y: component.position.y + 20 
-        }
+        },
+        autoResize: false // Disable auto-resize for duplicated components
       };
       setComponents(prev => [...prev, newComponent]);
       setSelectedComponentId(newComponent.id);
@@ -610,6 +613,7 @@ const Canvas: React.FC = () => {
             onEditMode={handleEditMode}
             onElementSelect={handleElementSelect}
             onRename={handleRenameComponent}
+            autoResize={component.autoResize}
           />
         ))}
       </div>
@@ -679,49 +683,70 @@ const Canvas: React.FC = () => {
             <Plus size={16} />
           </button>
         </div>
-                 <div className="color-picker-container" ref={colorPickerRef}>
-           <button className="canvas-color-btn" onClick={toggleColorPicker} title="Canvas Settings">
-             <Palette size={16} />
-           </button>
-           
-                        {showColorPicker && (
-               <div className="color-picker-panel">
-                 <div className="color-gradient" onClick={handleGradientClick}>
-                   <div className="gradient-overlay"></div>
-                   <div className="color-selector" style={{ 
-                     left: '20px', 
-                     top: '20px',
-                     borderColor: canvasColor === '#ffffff' ? '#000' : '#fff'
-                   }}></div>
-                 </div>
-                 
-                 <div className="color-bar" onClick={handleHueClick}>
-                   <div className="hue-slider"></div>
-                 </div>
-               
-               <div className="hex-input-container">
-                 <div className="color-preview" style={{ backgroundColor: canvasColor }}></div>
-                 <input 
-                   type="text" 
-                   className="hex-input" 
-                   value={canvasColor}
-                   onChange={(e) => handleColorChange(e.target.value)}
-                   placeholder="#2B2B2B"
-                 />
-               </div>
-               
-               <div className="dotted-texture-control">
-                 <span>Dotted Texture</span>
-                 <button 
-                   className={`toggle-switch ${showDots ? 'active' : ''}`}
-                   onClick={toggleDots}
-                 >
-                   <div className="toggle-slider"></div>
-                 </button>
-               </div>
-             </div>
-           )}
-         </div>
+        <div className="color-picker-container" ref={colorPickerRef}>
+          <button 
+            className="canvas-color-btn" 
+            onClick={toggleColorPicker} 
+            title="Canvas Settings" 
+            style={{
+              position: 'relative',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              background: `conic-gradient(from 0deg, ${canvasColor} 0%, ${canvasColor} 100%)`,
+              border: '2px solid #fff',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '200%',
+              background: canvasColor,
+              border: '2px solid rgb(40, 40, 40)',
+              boxSizing: 'border-box'
+            }} />
+          </button>
+          {showColorPicker && (
+            <div className="color-picker-panel">
+              <div className="color-gradient" onClick={handleGradientClick}>
+                <div className="gradient-overlay"></div>
+                <div className="color-selector" style={{ 
+                  left: '20px', 
+                  top: '20px',
+                  borderColor: canvasColor === '#ffffff' ? '#000' : '#fff'
+                }}></div>
+              </div>
+              <div className="color-bar" onClick={handleHueClick}>
+                <div className="hue-slider"></div>
+              </div>
+              <div className="hex-input-container">
+                <div className="color-preview" style={{ backgroundColor: canvasColor }}></div>
+                <input 
+                  type="text" 
+                  className="hex-input" 
+                  value={canvasColor}
+                  onChange={(e) => handleColorChange(e.target.value)}
+                  placeholder="#2B2B2B"
+                />
+              </div>
+              <div className="dotted-texture-control">
+                <span>Dotted Texture</span>
+                <button 
+                  className={`toggle-switch ${showDots ? 'active' : ''}`}
+                  onClick={toggleDots}
+                >
+                  <div className="toggle-slider"></div>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Bottom Right Controls */}
@@ -757,13 +782,13 @@ const Canvas: React.FC = () => {
         onClose={() => setShowSettingsModal(false)}
       />
 
-             {/* Inspector Panel */}
-       <InspectorPanel
-         isOpen={showInspectorPanel}
-         onClose={() => setShowInspectorPanel(false)}
-         selectedElement={selectedElement}
-         onUpdateElement={handleElementUpdate}
-       />
+      {/* Inspector Panel */}
+      <InspectorPanel
+        isOpen={showInspectorPanel}
+        onClose={() => setShowInspectorPanel(false)}
+        selectedElement={selectedElement}
+        onUpdateElement={handleElementUpdate}
+      />
     </div>
   );
 };

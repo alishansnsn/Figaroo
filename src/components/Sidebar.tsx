@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Sidebar.css';
 import { Home, Folder, Users, Moon, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
 
-const userAvatarUrl = 'https://randomuser.me/api/portraits/men/32.jpg'; // Example avatar
+const userAvatarUrl = 'https://randomuser.me/api/portraits/men/81.jpg'; // Example avatar
 
 const Sidebar: React.FC = () => {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
@@ -81,32 +81,30 @@ const Sidebar: React.FC = () => {
         <img src="/figaroo-logo.png" alt="Figaroo Logo" className="figaroo-logo-img" />
       </div>
 
-      {/* User Profile */}
-      <div
-        className={`user-profile${showProfileMenu ? ' open' : ''}`}
-        ref={profileRef}
-        onClick={() => setShowProfileMenu((v) => !v)}
-        tabIndex={0}
-        style={{ cursor: 'pointer', position: 'relative' }}
-      >
-        <div className="user-avatar-img">
-          <img src={userAvatarUrl} alt="Ali Shan" />
+      {/* User Profile Section */}
+      <div className="user-profile-container">
+        <div
+          className={`user-profile${showProfileMenu ? ' open' : ''}`}
+          ref={profileRef}
+          onClick={() => setShowProfileMenu((v) => !v)}
+          tabIndex={0}
+        >
+          <div className="user-avatar">
+            <img src={userAvatarUrl} alt="Ali Shan" />
+          </div>
+          <span className="user-name">Ali Shan</span>
+          <ChevronDown size={20} className={`profile-chevron${showProfileMenu ? ' rotated' : ''}`} />
         </div>
-        <span className="user-name">Ali Shan</span>
-        <span className={`profile-chevron${showProfileMenu ? ' rotated' : ''}`}>
-          <ChevronDown size={18} />
-        </span>
-        
-        {/* Profile dropdown menu */}
+
         {showProfileMenu && (
-          <div className="profile-menu glassy-menu" ref={profileMenuRef}>
-            <button className="glassy-menu-item" onClick={() => handleProfileMenuItem('Settings')}>
-              <Settings size={18} style={{ marginRight: 10 }} />
-              Settings
+          <div className="profile-menu" ref={profileMenuRef}>
+            <button className="profile-menu-item" onClick={() => handleProfileMenuItem('Settings')}>
+              <Settings size={18} />
+              <span>Settings</span>
             </button>
-            <button className="glassy-menu-item logout" onClick={() => handleProfileMenuItem('Log Out')}>
-              <LogOut size={18} style={{ marginRight: 10 }} />
-              Log Out
+            <button className="profile-menu-item logout" onClick={() => handleProfileMenuItem('Log Out')}>
+              <LogOut size={18} />
+              <span>Log Out</span>
             </button>
           </div>
         )}

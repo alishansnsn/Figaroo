@@ -24,6 +24,7 @@ interface GeneratedComponentProps {
   onEditMode?: (id: string, isEditMode: boolean) => void;
   onElementSelect?: (elementInfo: any) => void;
   onRename?: (id: string, newName: string) => void;
+  autoResize?: boolean;
 }
 
 type ResizeDirection = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
@@ -54,7 +55,8 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   onDuplicate,
   onEditMode,
   onElementSelect,
-  onRename
+  onRename,
+  autoResize = false
 }) => {
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -93,9 +95,56 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const moreOptionsRef = useRef<HTMLDivElement>(null);
 
-  // Minimum size constraints
+  // Size constraints
   const MIN_WIDTH = 100;
   const MIN_HEIGHT = 80;
+  const MAX_WIDTH = 800;
+  const MAX_HEIGHT = 600;
+
+  // Auto-resize effect to match content dimensions
+  useEffect(() => {
+    if (autoResize && contentRef.current) {
+      const measureContent = () => {
+        const contentElement = contentRef.current;
+        if (!contentElement) return;
+
+        // Create a temporary container to measure natural dimensions
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.visibility = 'hidden';
+        tempContainer.style.width = 'auto';
+        tempContainer.style.height = 'auto';
+        tempContainer.style.overflow = 'visible';
+        tempContainer.style.fontFamily = 'inherit';
+        tempContainer.style.fontSize = 'inherit';
+        tempContainer.style.lineHeight = 'inherit';
+        tempContainer.innerHTML = code;
+        
+        document.body.appendChild(tempContainer);
+        
+        // Get the natural dimensions
+        const naturalWidth = tempContainer.scrollWidth;
+        const naturalHeight = tempContainer.scrollHeight;
+        
+        // Clean up
+        document.body.removeChild(tempContainer);
+        
+        // Apply size constraints
+        const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, naturalWidth));
+        const newHeight = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, naturalHeight));
+        
+        // Only resize if dimensions are significantly different
+        if (Math.abs(newWidth - size.width) > 5 || Math.abs(newHeight - size.height) > 5) {
+          onResize(id, newWidth, newHeight);
+        }
+      };
+
+      // Use a small delay to ensure content is rendered
+      const timeoutId = setTimeout(measureContent, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [autoResize, code, id, onResize, size.width, size.height]);
 
   // Handle mouse down for dragging
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -591,6 +640,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
           <div className="selection-frame">
             <div className="component-label" onClick={handleLabelClick}>
               <span className="component-icon">📱</span>
+              {autoResize && <span className="auto-resize-indicator" title="Auto-resize enabled">🔄</span>}
               {isRenaming ? (
                 <div className="inline-rename-container">
                   <input
