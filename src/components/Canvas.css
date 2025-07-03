@@ -83,7 +83,8 @@
 .design-system-btn,
 .share-btn,
 .canvas-color-btn,
-.dots-toggle-btn {
+.dots-toggle-btn,
+.sidebar-toggle-btn {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -103,13 +104,42 @@
 .design-system-btn:hover,
 .share-btn:hover,
 .canvas-color-btn:hover,
-.dots-toggle-btn:hover {
+.dots-toggle-btn:hover,
+.sidebar-toggle-btn:hover {
   background-color: rgba(42, 42, 42, 0.9);
 }
 
 .dropdown-arrow {
   font-size: 10px;
   color: #888;
+}
+
+/* Sidebar Toggle Button - more compact since it's just an icon */
+.sidebar-toggle-btn {
+  padding: 8px 12px;
+  margin-right: 8px;
+  position: relative;
+  z-index: 1001; /* Higher than sidebar's z-index (1000) */
+  transition: transform 0.3s ease, left 0.3s ease;
+  background-color: rgba(26, 26, 26, 0.9);
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+/* When sidebar is open, move the button to the right */
+.sidebar-open ~ .canvas-container .sidebar-toggle-btn {
+  left: 250px; /* Match the sidebar width */
+  transform: translateX(10px); /* Add some space from the sidebar */
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: rgba(42, 42, 42, 0.95);
 }
 
 .zoom-controls {

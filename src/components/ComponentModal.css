@@ -197,23 +197,24 @@
 
 .examples-section {
   display: flex;
+  justify-content: center;
   flex-direction: column;
   gap: 12px;
   width: 100%;
 }
 
 .example-btn {
-  width: 100%;
-  padding: 16px 20px;
+  width: vw(100%);
+  padding: 12px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  border-radius: 24px 24px 24px 24px;
   color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 100;
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: left;
+  text-align: center;
 }
 
 .example-btn:hover {
@@ -238,7 +239,7 @@
   width: 100%;
   padding: 16px 20px 60px 20px;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(229, 160, 122, 1);
+  border: 1px solid rgba(243, 212, 195, 0.1);
   border-radius: 16px;
   color: #ffffff;
   font-size: 16px;
@@ -247,12 +248,12 @@
   transition: all 0.2s ease;
   box-sizing: border-box;
   font-family: inherit;
+  font-size: 12px;
 }
 
 .prompt-input:focus {
   border-color: #e5a07a;
   background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 0 0 3px rgba(240, 178, 44, 0.1);
 }
 
 .prompt-input::placeholder {
@@ -285,7 +286,6 @@
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
 }
-
 .design-system-dropdown {
   background: none;
   border: none;
@@ -294,6 +294,15 @@
   cursor: pointer;
   outline: none;
   font-family: inherit;
+  appearance: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.design-system-dropdown:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .design-system-dropdown option {
@@ -451,7 +460,7 @@
 }
 
 .step-icon-svg {
-  color: #e5a07a;  /* Brand orange */
+  color: #adabaa16;  /* Brand orange */
   opacity: 0.8;
 }
 

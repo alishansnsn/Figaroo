@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import './Canvas.css';
-import { Sparkles, Package, Settings, Upload, Plus, Minus } from 'lucide-react';
+import { Sparkles, Package, Settings, Upload, Plus, Minus, Menu } from 'lucide-react';
 import ComponentModal from './ComponentModal';
 import GeneratedComponent from './GeneratedComponent';
 import DesignSystemModal from './DesignSystemModal';
@@ -9,7 +9,12 @@ import InspectorPanel from './InspectorPanel';
 import { aiService } from '../services/aiService';
 import { userService } from '../services/userService';
 
-const Canvas: React.FC = () => {
+interface CanvasProps {
+  onToggleSidebar: () => void;
+  isSidebarOpen: boolean;
+}
+
+const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const [zoom, setZoom] = useState(80);
   const [canvasPosition, setCanvasPosition] = useState({ x: -100, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -620,6 +625,13 @@ const Canvas: React.FC = () => {
 
       {/* Top Left Controls */}
       <div className="control-group top-left">
+        <button 
+          className="sidebar-toggle-btn" 
+          onClick={onToggleSidebar}
+          title="Toggle Sidebar"
+        >
+          <Menu size={16} />
+        </button>
         <div className="components-dropdown" onClick={() => setShowComponentDropdown(!showComponentDropdown)}>
           <Package size={16} />
           <span>{selectedComponentId ? components.find(c => c.id === selectedComponentId)?.name || `Component ${components.findIndex(c => c.id === selectedComponentId) + 1}` : 'Components'}</span>
