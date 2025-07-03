@@ -15,6 +15,7 @@ interface ComponentModalProps {
 const ComponentModal: React.FC<ComponentModalProps> = ({ isOpen, onClose, onGenerate, editingComponent }) => {
   const [prompt, setPrompt] = useState('');
   const [designSystem, setDesignSystem] = useState('No design system');
+  const [showDesignSystemDropdown, setShowDesignSystemDropdown] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [chatMessages, setChatMessages] = useState<Array<{
     id: string;
@@ -28,6 +29,82 @@ const ComponentModal: React.FC<ComponentModalProps> = ({ isOpen, onClose, onGene
     status: 'pending' | 'active' | 'completed';
     subtext?: string;
   }>>([]);
+
+  // Typewriter animation state
+  const [typewriterText, setTypewriterText] = useState('');
+  const [typewriterIndex, setTypewriterIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
+
+  // Cycling placeholder messages
+  const placeholderMessages = [
+    "Describe what you want to create...",
+    "A modern login form with animations...",
+    "A dashboard card with charts...",
+    "A responsive navigation menu...",
+    "A beautiful landing page hero..."
+  ];
+
+  // Typewriter effect for placeholder
+  useEffect(() => {
+    if (chatMessages.length === 0 && !isGenerating && prompt === '') {
+      const currentMessage = placeholderMessages[currentPlaceholderIndex];
+      
+      if (typewriterIndex < currentMessage.length) {
+        // Typing effect with variable speed for more natural feel
+        const typingSpeed = Math.random() * 30 + 40; // 40-70ms for natural variation
+        const timer = setTimeout(() => {
+          setTypewriterText(currentMessage.slice(0, typewriterIndex + 1));
+          setTypewriterIndex(typewriterIndex + 1);
+        }, typingSpeed);
+        
+        return () => clearTimeout(timer);
+      } else {
+        // Wait before starting to delete
+        const waitTimer = setTimeout(() => {
+          setIsTyping(true);
+        }, 2000); // Wait 2 seconds before deleting
+        
+        return () => clearTimeout(waitTimer);
+      }
+    }
+  }, [typewriterIndex, currentPlaceholderIndex, chatMessages.length, isGenerating, prompt]);
+
+  // Delete effect
+  useEffect(() => {
+    if (isTyping && typewriterText.length > 0 && prompt === '') {
+      const deleteSpeed = Math.random() * 20 + 20; // 20-40ms for faster, varied deletion
+      const deleteTimer = setTimeout(() => {
+        setTypewriterText(typewriterText.slice(0, -1));
+      }, deleteSpeed);
+      
+      return () => clearTimeout(deleteTimer);
+    } else if (isTyping && typewriterText.length === 0) {
+      // Move to next placeholder
+      setCurrentPlaceholderIndex((prev) => (prev + 1) % placeholderMessages.length);
+      setTypewriterIndex(0);
+      setIsTyping(false);
+    }
+  }, [isTyping, typewriterText, prompt]);
+
+  // Reset typewriter when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setTypewriterText('');
+      setTypewriterIndex(0);
+      setIsTyping(false);
+      setCurrentPlaceholderIndex(0);
+    }
+  }, [isOpen]);
+
+  // Reset typewriter when user starts typing
+  useEffect(() => {
+    if (prompt !== '') {
+      setTypewriterText('');
+      setTypewriterIndex(0);
+      setIsTyping(false);
+    }
+  }, [prompt]);
 
   // Update prompt when editing component
   useEffect(() => {
@@ -183,7 +260,7 @@ const ComponentModal: React.FC<ComponentModalProps> = ({ isOpen, onClose, onGene
               {/* Main Text */}
               <div className="text-section">
                 <h1>What do you want to create?</h1>
-                <p>Describe your idea or component, and MagicPath will bring it to life.</p>
+                <p>Describe your idea or component, and Figaroo will bring it to life.</p>
               </div>
 
               {/* Upload Section */}
@@ -256,33 +333,104 @@ const ComponentModal: React.FC<ComponentModalProps> = ({ isOpen, onClose, onGene
           )}
         </div>
 
-        {/* Input Section */}
+                {/* Input Section */}
         <div className="input-section">
           <div className="input-container">
-            <input
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={chatMessages.length === 0 ? "Describe what you want to create..." : "Ask MagicPath..."}
-              className="prompt-input"
-              disabled={isGenerating}
-            />
-            <div className="input-controls">
-              <div className="design-system-selector">
-                <Image size={16} />
-                <select 
-                  value={designSystem}
-                  onChange={(e) => setDesignSystem(e.target.value)}
-                  className="design-system-dropdown"
+            {chatMessages.length === 0 && !isGenerating ? (
+              <div className="typewriter-container">
+                <input
+                  type="text"
+                  value={prompt}
+                  onChange={(e) => {
+                    setPrompt(e.target.value);
+                    if (e.target.value) {
+                      document.querySelector('.typewriter-cursor')?.classList.add('hidden');
+                    } else {
+                      document.querySelector('.typewriter-cursor')?.classList.remove('hidden');
+                    }
+                  }}
+                  onFocus={() => {
+                    document.querySelector('.typewriter-cursor')?.classList.add('hidden');
+                  }}
+                  onBlur={(e) => {
+                    if (!e.target.value) {
+                      document.querySelector('.typewriter-cursor')?.classList.remove('hidden');
+                    }
+                  }}
+                  onKeyPress={handleKeyPress}
+                  placeholder=""
+                  className="prompt-input typewriter"
                   disabled={isGenerating}
-                >
-                  <option>No design system</option>
-                  <option>Material UI</option>
-                  <option>Tailwind CSS</option>
-                  <option>Chakra UI</option>
-                </select>
+                />
+                <div className={`typewriter-placeholder ${isTyping ? 'typing' : ''}`}>
+                  {typewriterText}
+                  <span className="typewriter-cursor">|</span>
+                </div>
+                <div className="design-system-container">
+                  <button 
+                    className="design-system-button"
+                    onClick={() => setShowDesignSystemDropdown(!showDesignSystemDropdown)}
+                    disabled={isGenerating}
+                  >
+                    <Image size={16} />
+                  </button>
+                  {showDesignSystemDropdown && (
+                    <div className="design-system-dropdown-menu">
+                      {['No design system', 'Material UI', 'Tailwind CSS', 'Chakra UI'].map((option) => (
+                        <div 
+                          key={option}
+                          className={`design-system-option ${designSystem === option ? 'selected' : ''}`}
+                          onClick={() => {
+                            setDesignSystem(option);
+                            setShowDesignSystemDropdown(false);
+                          }}
+                        >
+                          {option}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
+            ) : (
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask Figaroo..."
+                  className="prompt-input"
+                  disabled={isGenerating}
+                />
+                <div className="design-system-container">
+                  <button 
+                    className="design-system-button"
+                    onClick={() => setShowDesignSystemDropdown(!showDesignSystemDropdown)}
+                    disabled={isGenerating}
+                  >
+                    <Image size={16} />
+                  </button>
+                  {showDesignSystemDropdown && (
+                    <div className="design-system-dropdown-menu">
+                      {['No design system', 'Material UI', 'Tailwind CSS', 'Chakra UI'].map((option) => (
+                        <div 
+                          key={option}
+                          className={`design-system-option ${designSystem === option ? 'selected' : ''}`}
+                          onClick={() => {
+                            setDesignSystem(option);
+                            setShowDesignSystemDropdown(false);
+                          }}
+                        >
+                          {option}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="input-controls">
               <button 
                 className={`generate-btn ${isGenerating ? 'generating' : ''}`}
                 onClick={handleGenerate}
