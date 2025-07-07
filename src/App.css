@@ -1,0 +1,21 @@
+.app {
+  height: 100vh;
+  width: 100vw;
+  background-color: #0f0f0f;
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Add smooth transition for sidebar movement */
+.sidebar {
+  transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Ensure the canvas container takes remaining space */
+.canvas-container {
+  flex: 1;
+  position: relative;
+  height: 100%;
+  overflow: auto;
+}

@@ -1,0 +1,428 @@
+.canvas {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+  transition: margin-right 0.3s ease;
+}
+
+/* Modal no longer needs canvas margin adjustment due to proper positioning */
+
+.canvas.space-pressed {
+  cursor: grab;
+}
+
+.canvas.space-pressed:active {
+  cursor: grabbing;
+}
+
+.canvas-content {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease-out;
+  transform-origin: center;
+}
+
+.placeholder-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  color: #e1dfdf;
+  font-size: 14px;
+  font-weight: 400;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.1);  /* semi-transparent background */
+  backdrop-filter: blur(12px);          /* the blur effect */
+  -webkit-backdrop-filter: blur(12px);  /* Safari support */
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15)
+}
+
+.placeholder-message:hover {
+  background-color: rgba(175, 172, 172, 0.35);
+}
+
+.placeholder-message:hover .sparkle-icon {
+  animation: sparkle 1s infinite;
+}
+
+.sparkle-icon {
+  width: 16px;
+  height: 16px;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+/* Control Groups */
+.control-group {
+  position: absolute;
+  z-index: 100;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+/* Button Styles */
+.components-dropdown,
+.design-system-btn,
+.share-btn,
+.canvas-color-btn,
+.dots-toggle-btn,
+.sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: rgba(26, 26, 26, 0.9);
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.components-dropdown:hover,
+.design-system-btn:hover,
+.share-btn:hover,
+.canvas-color-btn:hover,
+.dots-toggle-btn:hover,
+.sidebar-toggle-btn:hover {
+  background-color: rgba(42, 42, 42, 0.9);
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  color: #888;
+}
+
+/* Sidebar Toggle Button - more compact since it's just an icon */
+.sidebar-toggle-btn {
+  padding: 8px 12px;
+  margin-right: 8px;
+  position: relative;
+  z-index: 1001; /* Higher than sidebar's z-index (1000) */
+  transition: transform 0.3s ease, left 0.3s ease;
+  background-color: rgba(26, 26, 26, 0.9);
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+/* When sidebar is open, move the button to the right */
+.sidebar-open ~ .canvas-container .sidebar-toggle-btn {
+  left: 250px; /* Match the sidebar width */
+  transform: translateX(10px); /* Add some space from the sidebar */
+}
+
+.sidebar-toggle-btn:hover {
+  background-color: rgba(42, 42, 42, 0.95);
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background-color: rgba(26, 26, 26, 0.9);
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #888;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.zoom-btn:hover {
+  background-color: #2a2a2a;
+  color: #ffffff;
+}
+
+.zoom-level {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 500;
+  min-width: 40px;
+  text-align: center;
+}
+
+.add-component-btn {
+  width: 48px;
+  height: 48px;
+  background-color: #666666;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.add-component-btn:hover {
+  background-color: #777777;
+}
+
+.canvas-color-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  justify-content: center;
+}
+
+.color-picker-container {
+  position: relative;
+}
+
+.color-picker-panel {
+  position: absolute;
+  bottom: 50px;
+  left: 0;
+  width: 280px;
+  background-color: rgba(26, 26, 26, 0.95);
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.color-gradient {
+  width: 100%;
+  height: 160px;
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 1) 0%, 
+    rgba(255, 255, 255, 0) 50%, 
+    rgba(0, 0, 0, 0) 50%, 
+    rgba(0, 0, 0, 1) 100%
+  ),
+  linear-gradient(to right, 
+    #ff0000 0%, 
+    #ffff00 16.66%, 
+    #00ff00 33.33%, 
+    #00ffff 50%, 
+    #0000ff 66.66%, 
+    #ff00ff 83.33%, 
+    #ff0000 100%
+  );
+  border-radius: 8px;
+  position: relative;
+  margin-bottom: 12px;
+  cursor: crosshair;
+}
+
+.gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.7));
+  border-radius: 8px;
+}
+
+.color-selector {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.color-bar {
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to right, 
+    #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, 
+    #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, 
+    #ff00ff, #ff0080, #ff0000
+  );
+  border-radius: 10px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.hue-slider {
+  width: 4px;
+  height: 24px;
+  background: #fff;
+  border-radius: 2px;
+  position: relative;
+  top: -2px;
+  left: 20px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+.hex-input-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.color-preview {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #2a2a2a;
+}
+
+.hex-input {
+  flex: 1;
+  background-color: rgba(42, 42, 42, 0.8);
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 14px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+.hex-input:focus {
+  outline: none;
+  border-color: #666;
+}
+
+.dotted-texture-control {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.toggle-switch {
+  width: 44px;
+  height: 24px;
+  background-color: #2a2a2a;
+  border: none;
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-switch.active {
+  background-color: #666;
+}
+
+.toggle-slider {
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active .toggle-slider {
+  transform: translateX(20px);
+}
+
+/* Components Dropdown */
+.components-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: rgba(26, 26, 26, 0.95);
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 200;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.dropdown-item {
+  padding: 12px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover:not(.disabled) {
+  background-color: rgba(42, 42, 42, 0.8);
+}
+
+.dropdown-item.active {
+  background-color: rgba(102, 102, 102, 0.3);
+}
+
+.dropdown-item.disabled {
+  color: #666;
+  cursor: not-allowed;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #2a2a2a;
+  margin: 4px 0;
+} 

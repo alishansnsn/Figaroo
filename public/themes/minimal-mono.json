@@ -1,0 +1,60 @@
+{
+  "name": "Minimal Mono",
+  "tokens": {
+    "colors": {
+      "background": "oklch(0.99 0.002 0)",
+      "foreground": "oklch(0.20 0.005 0)",
+      "card": "oklch(1.0000 0 0)",
+      "card-foreground": "oklch(0.20 0.005 0)",
+      "popover": "oklch(1.0000 0 0)",
+      "popover-foreground": "oklch(0.20 0.005 0)",
+      "primary": "oklch(0.30 0.008 0)",
+      "primary-foreground": "oklch(1.0000 0 0)",
+      "secondary": "oklch(0.96 0.003 0)",
+      "secondary-foreground": "oklch(0.20 0.005 0)",
+      "muted": "oklch(0.97 0.003 0)",
+      "muted-foreground": "oklch(0.55 0.005 0)",
+      "accent": "oklch(0.40 0.008 0)",
+      "accent-foreground": "oklch(1.0000 0 0)",
+      "destructive": "oklch(0.45 0.015 0)",
+      "destructive-foreground": "oklch(1.0000 0 0)",
+      "border": "oklch(0.94 0.003 0)",
+      "input": "oklch(0.94 0.003 0)",
+      "ring": "oklch(0.30 0.008 0)",
+      "chart-1": "oklch(0.30 0.008 0)",
+      "chart-2": "oklch(0.40 0.008 0)",
+      "chart-3": "oklch(0.50 0.008 0)",
+      "chart-4": "oklch(0.60 0.008 0)",
+      "chart-5": "oklch(0.70 0.008 0)"
+    },
+    "typography": {
+      "font-sans": "Helvetica Neue, Arial, sans-serif",
+      "font-serif": "Times, serif",
+      "font-mono": "Monaco, Consolas, monospace"
+    },
+    "spacing": {
+      "radius": "0.25rem",
+      "spacing": "0.125rem"
+    },
+    "shadows": {
+      "shadow-2xs": "0px 1px 2px 0px hsl(0 0% 0% / 0.02)",
+      "shadow-xs": "0px 1px 2px 0px hsl(0 0% 0% / 0.03)",
+      "shadow-sm": "0px 1px 3px 0px hsl(0 0% 0% / 0.05), 0px 1px 2px 0px hsl(0 0% 0% / 0.06)",
+      "shadow": "0px 2px 4px 0px hsl(0 0% 0% / 0.06), 0px 1px 2px 0px hsl(0 0% 0% / 0.06)",
+      "shadow-md": "0px 4px 6px 0px hsl(0 0% 0% / 0.07), 0px 2px 4px 0px hsl(0 0% 0% / 0.06)",
+      "shadow-lg": "0px 6px 10px 0px hsl(0 0% 0% / 0.08), 0px 2px 4px 0px hsl(0 0% 0% / 0.06)",
+      "shadow-xl": "0px 10px 15px 0px hsl(0 0% 0% / 0.10), 0px 4px 6px 0px hsl(0 0% 0% / 0.05)",
+      "shadow-2xl": "0px 20px 25px 0px hsl(0 0% 0% / 0.15)"
+    },
+    "borders": {
+      "radius-sm": "calc(var(--radius) - 1px)",
+      "radius-md": "var(--radius)",
+      "radius-lg": "calc(var(--radius) + 1px)",
+      "radius-xl": "calc(var(--radius) + 2px)"
+    }
+  },
+  "description": "Ultra-minimal monochrome theme focused on typography and spacing",
+  "category": "light",
+  "version": "1.0.0",
+  "author": "Figaroo Design System"
+} 
