@@ -5,6 +5,7 @@ import './DesignSystemPopover.css';
 import { getAllThemes, getUserThemes, saveTheme, deleteTheme } from './storage';
 import { parseDesignSystemFile } from './parser';
 import { createThemeOptions } from './themeLoader';
+import { ComponentShowcase } from '../ComponentShowcase'; // Import the showcase
 
 // Common color palette for color picker
 const COLOR_PALETTE = [
@@ -708,7 +709,9 @@ const DesignSystemPopover: React.FC<DesignSystemPopoverProps> = ({
   const renderPreview = () => {
     return (
       <div className="preview-panel">
-        {/* Placeholder for future preview components */}
+        <div className="preview-content" style={{ overflowY: 'auto', flex: 1 }}>
+          <ComponentShowcase />
+        </div>
       </div>
     );
   };
