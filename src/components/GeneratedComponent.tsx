@@ -5,6 +5,11 @@ import {
   Wand2, Eye, ArrowRight, MoreHorizontal, RefreshCw, 
   Tag, ExternalLink, Layers 
 } from 'lucide-react';
+import { HTMLSanitizer } from '../utils/sanitizer';
+import { COMPONENT_CONSTRAINTS, MESSAGES } from '../constants';
+import { ComponentToolbar } from './GeneratedComponent/ComponentToolbar';
+import { ComponentResizeHandles } from './GeneratedComponent/ComponentResizeHandles';
+import { ErrorHandler } from '../utils/errorHandler';
 
 interface GeneratedComponentProps {
   id: string;
@@ -95,11 +100,8 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const moreOptionsRef = useRef<HTMLDivElement>(null);
 
-  // Size constraints
-  const MIN_WIDTH = 100;
-  const MIN_HEIGHT = 80;
-  const MAX_WIDTH = 800;
-  const MAX_HEIGHT = 600;
+  // Size constraints from constants
+  const { MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT, MEASURE_DELAY, AI_PROCESSING_DELAY } = COMPONENT_CONSTRAINTS;
 
   // Auto-resize effect to match content dimensions
   useEffect(() => {
@@ -140,7 +142,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
       };
 
       // Use a small delay to ensure content is rendered
-      const timeoutId = setTimeout(measureContent, 100);
+      const timeoutId = setTimeout(measureContent, MEASURE_DELAY);
       
       return () => clearTimeout(timeoutId);
     }
@@ -344,17 +346,21 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
     }
   }, [name, componentName]);
 
-  // Render generated content safely
+  // Render generated content safely with XSS protection
   const renderGeneratedContent = () => {
     try {
+      // Sanitize the HTML code to prevent XSS attacks
+      const sanitizedCode = HTMLSanitizer.sanitize(code);
+      
       return (
         <div 
           className="generated-content"
-          dangerouslySetInnerHTML={{ __html: code }}
+          dangerouslySetInnerHTML={{ __html: sanitizedCode }}
           onClick={handleElementClick}
         />
       );
     } catch (error) {
+      console.error('Error sanitizing or rendering component:', error);
       return (
         <div className="error-content">
           <div className="error-icon">⚠️</div>
@@ -371,8 +377,8 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
     setTimeout(() => {
       setIsProcessingAI(false);
       // Here you would integrate with your AI service
-      alert('Ask Figaroo functionality coming soon!');
-    }, 2000);
+      ErrorHandler.showInfo('AI Processing', MESSAGES.COMING_SOON);
+    }, AI_PROCESSING_DELAY);
   };
 
   const handleEditClick = () => {
@@ -380,13 +386,16 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   };
 
   const handleCreateFlow = () => {
-    alert('Create Flow functionality coming soon!');
+    ErrorHandler.showInfo('Create Flow', MESSAGES.COMING_SOON);
   };
 
   const handleOpenNewTab = () => {
     // Create a new window/tab with just the component
     const newWindow = window.open('', '_blank');
     if (newWindow) {
+      // Sanitize the code before opening in new tab to prevent XSS
+      const sanitizedCode = HTMLSanitizer.sanitize(code);
+      
       newWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -406,7 +415,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
             </style>
           </head>
           <body>
-            ${code}
+            ${sanitizedCode}
           </body>
         </html>
       `);
@@ -422,7 +431,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   const handleRefresh = () => {
     setShowMoreOptionsMenu(false);
     // Simulate refresh
-    alert('Component refreshed!');
+    ErrorHandler.showSuccess('Component Refreshed', 'Component has been refreshed successfully!');
   };
 
   const handleRename = () => {
@@ -459,7 +468,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   const handleInlineRenameSubmit = () => {
     if (editingName.trim()) {
       const newName = editingName.trim();
-      console.log('GeneratedComponent: Submitting new name:', newName);
+      // Component name submitted: ${newName}
       setComponentName(newName);
       onRename && onRename(id, newName);
     }
@@ -497,7 +506,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   };
 
   const handleAddVariant = () => {
-    alert('Add Variant functionality coming soon!');
+    ErrorHandler.showInfo('Add Variant', MESSAGES.COMING_SOON);
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Sidebar.css';
 import { Home, Folder, Users, Moon, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { ErrorHandler } from '../utils/errorHandler';
 
 const userAvatarUrl = 'https://randomuser.me/api/portraits/men/81.jpg'; // Example avatar
 
@@ -89,13 +90,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   // Settings menu item handler
   const handleMenuItem = (label: string) => {
     setShowSettingsMenu(false);
-    alert(label);
+    ErrorHandler.showInfo(label, 'This feature is coming soon!');
   };
 
   // Profile menu item handler
   const handleProfileMenuItem = (label: string) => {
     setShowProfileMenu(false);
-    alert(label);
+    ErrorHandler.showInfo(label, 'This feature is coming soon!');
   };
 
   return (

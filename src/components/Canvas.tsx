@@ -8,6 +8,7 @@ import SettingsModal from './SettingsModal';
 import InspectorPanel from './InspectorPanel';
 import { aiService } from '../services/aiService';
 import { userService } from '../services/userService';
+import { ErrorHandler } from '../utils/errorHandler';
 
 interface CanvasProps {
   onToggleSidebar: () => void;
@@ -323,7 +324,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
     // Check usage limits
     const usageCheck = userService.canGenerateComponent();
     if (!usageCheck.allowed) {
-      alert(usageCheck.reason);
+      ErrorHandler.showWarning('Usage Limit', usageCheck.reason);
       return;
     }
 
@@ -372,8 +373,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
         setSelectedComponentId(newComponent.id);
       }
     } catch (error) {
-      console.error('Component generation failed:', error);
-      alert('Failed to generate component. Please check your settings or try again.');
+      ErrorHandler.handleError(error as Error, 'component generation');
     }
   };
 
@@ -424,7 +424,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   };
 
   const handleRenameComponent = (id: string, newName: string) => {
-    console.log('Renaming component:', id, 'to:', newName);
+    // Component renamed: ${id} to ${newName}
     setComponents(prev => prev.map(comp => 
       comp.id === id ? { ...comp, name: newName } : comp
     ));

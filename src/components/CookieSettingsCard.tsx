@@ -78,10 +78,7 @@ export const CookieSettingsCard: React.FC = () => {
   // Handle save action (demo only)
   const handleSave = () => {
     // In a real app, this would save cookie preferences
-    console.log('Cookie preferences saved:', {
-      strictlyNecessary,
-      functionalCookies,
-    });
+    // Cookie preferences saved: { strictlyNecessary, functionalCookies }
   };
 
   return (

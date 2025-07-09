@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './SettingsModal.css';
 import { X, Key, Crown, Zap, Shield, Info } from 'lucide-react';
 import { userService, UserSettings } from '../services/userService';
+import { ErrorHandler } from '../utils/errorHandler';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -27,14 +28,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     userService.updateApiKey(apiKey);
     setSettings(userService.getUserSettings());
     // Show success feedback
-    alert('API key saved successfully!');
+    ErrorHandler.showSuccess('API Key Saved', 'Your API key has been saved successfully!');
   };
 
   const handleUpgradeToPro = () => {
     userService.upgradeToPro(apiKey);
     setSettings(userService.getUserSettings());
     // Show success feedback
-    alert('Upgraded to Pro! You now have unlimited generations.');
+    ErrorHandler.showSuccess('Upgraded to Pro!', 'You now have unlimited generations.');
   };
 
   const usageStats = userService.getUsageStats();
