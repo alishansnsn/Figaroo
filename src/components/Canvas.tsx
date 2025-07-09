@@ -9,7 +9,7 @@ import InspectorPanel from './InspectorPanel';
 import { aiService } from '../services/aiService';
 import { userService } from '../services/userService';
 import { ErrorHandler } from '../utils/errorHandler';
-import { useUIStore, useDesignSystemStore } from '../stores';
+import { useUIStore, useDesignSystemStore, useComponentStore, useCanvasStore } from '../stores';
 
 interface CanvasProps {
   onToggleSidebar: () => void;
@@ -17,13 +17,6 @@ interface CanvasProps {
 }
 
 const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
-  const [zoom, setZoom] = useState(80);
-  const [canvasPosition, setCanvasPosition] = useState({ x: -100, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [canvasColor, setCanvasColor] = useState('#2B2B2B');
-  const [showDots, setShowDots] = useState(true);
-  const [showColorPicker, setShowColorPicker] = useState(false);
   // Use UI store for modal states
   const {
     showComponentModal,
@@ -41,6 +34,48 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   // Use design system store
   const { selectedDesignSystem, setSelectedDesignSystem } = useDesignSystemStore();
   
+  // Use component store alongside existing state (dual state for safety)
+  const {
+    components: storeComponents,
+    selectedComponentId: storeSelectedId,
+    editingComponentId: storeEditingId,
+    editModeComponentId: storeEditModeId,
+    selectedElement: storeSelectedElement,
+    addComponent,
+    updateComponent,
+    deleteComponent,
+    duplicateComponent,
+    selectComponent,
+    setEditingComponent: setStoreEditingComponent,
+    setEditModeComponent,
+    setSelectedElement: setStoreSelectedElement,
+    moveComponent,
+    resizeComponent,
+    renameComponent,
+    updateElementInComponent
+  } = useComponentStore();
+  
+  // Use canvas store for all canvas state
+  const {
+    zoom,
+    canvasPosition,
+    isDragging,
+    isSpacePressed,
+    canvasColor,
+    showDots,
+    showColorPicker,
+    zoomIn,
+    zoomOut,
+    setCanvasPosition,
+    setIsDragging,
+    setIsSpacePressed,
+    setCanvasColor,
+    toggleDots,
+    setShowColorPicker,
+    toggleColorPicker
+  } = useCanvasStore();
+  
+  // Keep existing state for gradual migration
   const [components, setComponents] = useState<Array<{
     id: string;
     code: string;
@@ -59,19 +94,19 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const colorPickerRef = useRef<HTMLDivElement>(null);
 
   const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 10, 200));
+    zoomIn();
   };
 
   const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 10, 10));
+    zoomOut();
   };
 
-  const toggleColorPicker = () => {
-    setShowColorPicker(prev => !prev);
+  const handleToggleColorPicker = () => {
+    toggleColorPicker();
   };
 
-  const toggleDots = () => {
-    setShowDots(prev => !prev);
+  const handleToggleDots = () => {
+    toggleDots();
   };
 
   const handleAddComponent = () => {
@@ -82,25 +117,33 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const handleEditMode = (componentId: string, isEditMode: boolean) => {
     if (isEditMode) {
       setEditModeComponentId(componentId);
+      setEditModeComponent(componentId);
       setInspectorPanel(true);
       setSelectedElement(null);
+      setStoreSelectedElement(null);
     } else {
       setEditModeComponentId(null);
+      setEditModeComponent(null);
       setInspectorPanel(false);
       setSelectedElement(null);
+      setStoreSelectedElement(null);
     }
   };
 
   // Handle element selection in edit mode
   const handleElementSelect = (elementInfo: any) => {
     setSelectedElement(elementInfo);
+    setStoreSelectedElement(elementInfo);
   };
 
   // Handle element updates from inspector
   const handleElementUpdate = (updates: any) => {
     if (!editModeComponentId || !selectedElement) return;
 
-    // Find the component being edited
+    // Use store's updateElementInComponent for both store and local state
+    updateElementInComponent(editModeComponentId, selectedElement, updates);
+    
+    // Also update local state for safety
     const component = components.find(comp => comp.id === editModeComponentId);
     if (!component) return;
 
@@ -363,12 +406,22 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
       
       if (editingComponent) {
         // Update existing component
+        const updatedComponent = {
+          code,
+          prompt,
+          name: generateComponentName(prompt),
+          autoResize: false
+        };
+        
+        // Update both store and local state
+        updateComponent(editingComponent, updatedComponent);
         setComponents(prev => prev.map(comp => 
           comp.id === editingComponent 
-            ? { ...comp, code, prompt, name: generateComponentName(prompt), autoResize: false }
+            ? { ...comp, ...updatedComponent }
             : comp
         ));
         setEditingComponent(null);
+        setStoreEditingComponent(null);
       } else {
         // Create new component
         const newComponent = {
@@ -380,6 +433,9 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
           size: { width: 300, height: 200 },
           autoResize: true
         };
+        
+        // Add to both store and local state
+        addComponent(newComponent);
         setComponents(prev => [...prev, newComponent]);
         setSelectedComponentId(newComponent.id);
       }
@@ -390,11 +446,14 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
 
   const handleEditComponent = (componentId: string) => {
     setEditingComponent(componentId);
+    setStoreEditingComponent(componentId);
     setSelectedComponentId(componentId);
     setComponentModal(true);
   };
 
   const handleDeleteComponent = (componentId: string) => {
+    // Delete from both store and local state
+    deleteComponent(componentId);
     setComponents(prev => prev.filter(comp => comp.id !== componentId));
     if (selectedComponentId === componentId) {
       setSelectedComponentId(null);
@@ -404,6 +463,10 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const handleDuplicateComponent = (componentId: string) => {
     const component = components.find(comp => comp.id === componentId);
     if (component) {
+      // Duplicate in store (store will handle the new ID and positioning)
+      duplicateComponent(componentId);
+      
+      // Also duplicate in local state for safety
       const newComponent = {
         ...component,
         id: Date.now().toString(),
@@ -420,22 +483,28 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
 
   const handleSelectComponent = (id: string) => {
     setSelectedComponentId(id);
+    selectComponent(id);
   };
 
   const handleMoveComponent = (id: string, x: number, y: number) => {
+    // Move in both store and local state
+    moveComponent(id, x, y);
     setComponents(prev => prev.map(comp => 
       comp.id === id ? { ...comp, position: { x, y } } : comp
     ));
   };
 
   const handleResizeComponent = (id: string, width: number, height: number) => {
+    // Resize in both store and local state
+    resizeComponent(id, width, height);
     setComponents(prev => prev.map(comp => 
       comp.id === id ? { ...comp, size: { width, height } } : comp
     ));
   };
 
   const handleRenameComponent = (id: string, newName: string) => {
-    // Component renamed: ${id} to ${newName}
+    // Rename in both store and local state
+    renameComponent(id, newName);
     setComponents(prev => prev.map(comp => 
       comp.id === id ? { ...comp, name: newName } : comp
     ));
@@ -445,6 +514,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === canvasRef.current || e.target === e.currentTarget) {
       setSelectedComponentId(null);
+      selectComponent(null);
       setComponentDropdown(false);
     }
   };
@@ -560,20 +630,21 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
       setIsDragging(true);
       dragStart.current = { x: e.clientX - canvasPosition.x, y: e.clientY - canvasPosition.y };
     }
-  }, [isSpacePressed, canvasPosition]);
+  }, [isSpacePressed, canvasPosition, setIsDragging]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isDragging && isSpacePressed) {
-      setCanvasPosition({
+      const newPosition = {
         x: e.clientX - dragStart.current.x,
         y: e.clientY - dragStart.current.y
-      });
+      };
+      setCanvasPosition(newPosition);
     }
-  }, [isDragging, isSpacePressed]);
+  }, [isDragging, isSpacePressed, setCanvasPosition]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  }, []);
+  }, [setIsDragging]);
 
   return (
     <div 
@@ -710,7 +781,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
         <div className="color-picker-container" ref={colorPickerRef}>
           <button 
             className="canvas-color-btn" 
-            onClick={toggleColorPicker} 
+            onClick={handleToggleColorPicker} 
             title="Canvas Settings" 
             style={{
               position: 'relative',
@@ -763,7 +834,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
                 <span>Dotted Texture</span>
                 <button 
                   className={`toggle-switch ${showDots ? 'active' : ''}`}
-                  onClick={toggleDots}
+                  onClick={handleToggleDots}
                 >
                   <div className="toggle-slider"></div>
                 </button>
