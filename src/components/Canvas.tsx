@@ -9,6 +9,7 @@ import InspectorPanel from './InspectorPanel';
 import { aiService } from '../services/aiService';
 import { userService } from '../services/userService';
 import { ErrorHandler } from '../utils/errorHandler';
+import { useUIStore } from '../stores';
 
 interface CanvasProps {
   onToggleSidebar: () => void;
@@ -23,12 +24,21 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const [canvasColor, setCanvasColor] = useState('#2B2B2B');
   const [showDots, setShowDots] = useState(true);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [showComponentModal, setShowComponentModal] = useState(false);
-  const [showComponentDropdown, setShowComponentDropdown] = useState(false);
-  const [showDesignSystemPopover, setShowDesignSystemPopover] = useState(false);
+  // Use UI store for modal states
+  const {
+    showComponentModal,
+    showComponentDropdown,
+    showDesignSystemPopover,
+    showSettingsModal,
+    showInspectorPanel,
+    setComponentModal,
+    setComponentDropdown,
+    setDesignSystemPopover,
+    setSettingsModal,
+    setInspectorPanel
+  } = useUIStore();
+  
   const [selectedDesignSystem, setSelectedDesignSystem] = useState('None');
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [showInspectorPanel, setShowInspectorPanel] = useState(false);
   const [components, setComponents] = useState<Array<{
     id: string;
     code: string;
@@ -64,18 +74,18 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   };
 
   const handleAddComponent = () => {
-    setShowComponentModal(true);
+    setComponentModal(true);
   };
 
   // Handle edit mode toggle
   const handleEditMode = (componentId: string, isEditMode: boolean) => {
     if (isEditMode) {
       setEditModeComponentId(componentId);
-      setShowInspectorPanel(true);
+      setInspectorPanel(true);
       setSelectedElement(null);
     } else {
       setEditModeComponentId(null);
-      setShowInspectorPanel(false);
+      setInspectorPanel(false);
       setSelectedElement(null);
     }
   };
@@ -380,7 +390,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const handleEditComponent = (componentId: string) => {
     setEditingComponent(componentId);
     setSelectedComponentId(componentId);
-    setShowComponentModal(true);
+    setComponentModal(true);
   };
 
   const handleDeleteComponent = (componentId: string) => {
@@ -434,14 +444,14 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === canvasRef.current || e.target === e.currentTarget) {
       setSelectedComponentId(null);
-      setShowComponentDropdown(false);
+      setComponentDropdown(false);
     }
   };
 
   // Handle double-click to open component modal
   const handleCanvasDoubleClick = (e: React.MouseEvent) => {
     if (e.target === canvasRef.current || e.target === e.currentTarget) {
-      setShowComponentModal(true);
+      setComponentModal(true);
     }
   };
 
@@ -633,7 +643,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
         >
           <Menu size={16} />
         </button>
-        <div className="components-dropdown" onClick={() => setShowComponentDropdown(!showComponentDropdown)}>
+        <div className="components-dropdown" onClick={() => setComponentDropdown(!showComponentDropdown)}>
           <Package size={16} />
           <span>{selectedComponentId ? components.find(c => c.id === selectedComponentId)?.name || `Component ${components.findIndex(c => c.id === selectedComponentId) + 1}` : 'Components'}</span>
           <span className="dropdown-arrow">▼</span>
@@ -650,7 +660,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSelectComponent(component.id);
-                      setShowComponentDropdown(false);
+                      setComponentDropdown(false);
                     }}
                   >
                     {component.name || `Component ${index + 1}`}
@@ -662,8 +672,8 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
                 className="dropdown-item" 
                 onClick={(e) => {
                   e.stopPropagation();
-                  setShowComponentModal(true);
-                  setShowComponentDropdown(false);
+                  setComponentModal(true);
+                  setComponentDropdown(false);
                 }}
               >
                 + Add Component
@@ -671,7 +681,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
             </div>
           )}
         </div>
-        <button className="design-system-btn" onClick={() => setShowDesignSystemPopover(true)}>
+        <button className="design-system-btn" onClick={() => setDesignSystemPopover(true)}>
           <Settings size={16} />
           <span>Design System</span>
         </button>
@@ -773,7 +783,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
             <ComponentModal
         isOpen={showComponentModal}
         onClose={() => {
-          setShowComponentModal(false);
+          setComponentModal(false);
           setEditingComponent(null);
         }}
         onGenerate={handleGenerateComponent}
@@ -788,7 +798,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
       {/* Design System Popover */}
       <DesignSystemPopover
         isOpen={showDesignSystemPopover}
-        onClose={() => setShowDesignSystemPopover(false)}
+        onClose={() => setDesignSystemPopover(false)}
         onSelect={setSelectedDesignSystem}
         selectedSystem={selectedDesignSystem}
       />
@@ -796,13 +806,13 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
       {/* Settings Modal */}
       <SettingsModal
         isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
+        onClose={() => setSettingsModal(false)}
       />
 
       {/* Inspector Panel */}
       <InspectorPanel
         isOpen={showInspectorPanel}
-        onClose={() => setShowInspectorPanel(false)}
+        onClose={() => setInspectorPanel(false)}
         selectedElement={selectedElement}
         onUpdateElement={handleElementUpdate}
       />

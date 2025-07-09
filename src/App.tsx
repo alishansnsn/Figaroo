@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import Canvas from './components/Canvas';
 import { ToastProvider, useToast } from './components/Toast/ToastProvider';
 import { ErrorHandler } from './utils/errorHandler';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import { useUIStore } from './stores';
 
 function AppContent() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { showToast } = useToast();
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
-  };
+  
+  // Use UI store for sidebar state
+  const { 
+    isSidebarOpen, 
+    toggleSidebar, 
+    setSidebarOpen 
+  } = useUIStore();
 
   // Initialize error handler with toast provider
   useEffect(() => {
@@ -21,7 +24,7 @@ function AppContent() {
 
   return (
     <div className="app">
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
       <Canvas onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
     </div>
   );
