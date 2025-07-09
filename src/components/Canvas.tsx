@@ -9,7 +9,7 @@ import InspectorPanel from './InspectorPanel';
 import { aiService } from '../services/aiService';
 import { userService } from '../services/userService';
 import { ErrorHandler } from '../utils/errorHandler';
-import { useUIStore } from '../stores';
+import { useUIStore, useDesignSystemStore } from '../stores';
 
 interface CanvasProps {
   onToggleSidebar: () => void;
@@ -38,7 +38,9 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
     setInspectorPanel
   } = useUIStore();
   
-  const [selectedDesignSystem, setSelectedDesignSystem] = useState('None');
+  // Use design system store
+  const { selectedDesignSystem, setSelectedDesignSystem } = useDesignSystemStore();
+  
   const [components, setComponents] = useState<Array<{
     id: string;
     code: string;
@@ -52,7 +54,6 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
   const [editingComponent, setEditingComponent] = useState<string | null>(null);
   const [editModeComponentId, setEditModeComponentId] = useState<string | null>(null);
   const [selectedElement, setSelectedElement] = useState<any>(null);
-  const [designSystem, setDesignSystem] = useState('No design system');
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef({ x: 0, y: 0 });
   const colorPickerRef = useRef<HTMLDivElement>(null);
@@ -345,7 +346,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
       // Generate component using AI service
       const generationRequest = {
         prompt,
-        designSystem: designSystem !== 'No design system' ? designSystem : undefined,
+        designSystem: selectedDesignSystem !== 'None' ? selectedDesignSystem : undefined,
         userTier: {
           type: userSettings.tier,
           apiKey: userSettings.apiKey
