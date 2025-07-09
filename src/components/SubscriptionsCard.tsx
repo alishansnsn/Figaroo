@@ -9,8 +9,12 @@ export const SubscriptionsCard: React.FC = () => {
   const points = [10, 80, 30, 90, 20, 70, 10, 15, 10, 20, 15, 10];
   const width = 260;
   const height = 60;
-  const step = width / (points.length - 1);
-  const chartPoints = points.map((p, i) => `${i * step},${height - (p / 100) * height}`).join(' ');
+  const paddingX = 12; // horizontal padding for the chart
+  const paddingY = 8;  // vertical padding for the chart
+  const step = (width - 2 * paddingX) / (points.length - 1);
+  const chartPoints = points
+    .map((p, i) => `${paddingX + i * step},${height - paddingY - (p / 100) * (height - 2 * paddingY)}`)
+    .join(' ');
 
   return (
     <div className="bg-card text-foreground rounded-2xl border border-border p-6 w-full max-w-md mx-auto shadow-md flex flex-col justify-between min-h-[220px]">
