@@ -20,10 +20,10 @@ router.get('/models', (req, res) => {
           description: 'Fast and efficient model for basic component generation'
         },
         {
-          id: 'meta-llama/llama-2-13b-chat',
-          name: 'Llama 2 13B',
+          id: 'deepseek/deepseek-chat-v3-0324',
+          name: 'Deepseek v3',
           tier: 'free',
-          description: 'Balanced performance and quality'
+          description: 'Fast and efficient model for basic component generation'
         },
         {
           id: 'anthropic/claude-3.5-sonnet',

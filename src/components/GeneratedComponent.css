@@ -175,6 +175,23 @@
   margin-left: 2px;
 }
 
+.fallback-indicator {
+  font-size: 10px;
+  opacity: 0.8;
+  margin-left: 2px;
+  color: #f59e0b;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
 .size-display {
   background: rgba(44, 44, 46, 0.95);
   backdrop-filter: blur(10px);

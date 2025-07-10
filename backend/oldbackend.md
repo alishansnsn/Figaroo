@@ -1,4 +1,4 @@
-### Backend Services Required
+# Backend Services Required
 
 ## Core Services:
 Authentication & User Management
@@ -13,6 +13,7 @@ Real-time Collaboration (future)
 Analytics & Monitoring
 Email Notifications
 Payment Processing (for Pro tier)
+
 # **Product Requirements Document (PRD)**
 ## **Figaroo - AI-Powered UI Component Generator**
 
@@ -74,30 +75,13 @@ Docker + VPS Deployment
 ├── SSL: Let's Encrypt
 └── Basic health monitoring
 ```
-## **Project Structure**
-```
-   backend/
-   ├── src/
-   │   ├── controllers/
-   │   │   ├── aiController.ts      # AI API proxy
-   │   │   ├── authController.ts
-   │   │   └── componentController.ts
-   │   ├── services/
-   │   │   ├── openRouterService.ts # AI service
-   │   │   └── rateLimitService.ts
-   │   ├── middleware/
-   │   │   ├── auth.ts
-   │   │   └── rateLimiter.ts
-   │   └── routes/
-   │       ├── ai.ts               # AI endpoints
-   │       └── components.ts
-```
 
 ---
 
 ## **3. Implementation Priority & Task Breakdown**
 
 ### **Phase 1: AI Integration (Priority: CRITICAL)**
+**Timeline:** 2-3 weeks
 **Specialist Required:** Backend Developer + AI/ML Engineer
 
 #### **3.1.1 Real OpenRouter API Integration**

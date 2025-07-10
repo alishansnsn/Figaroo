@@ -1,6 +1,31 @@
 import { ApiError } from '../middleware/errorHandler';
 
 // Types for AI service
+interface OpenRouterMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+interface OpenRouterRequest {
+  model: string;
+  messages: OpenRouterMessage[];
+  temperature?: number;
+  max_tokens?: number;
+}
+
+interface OpenRouterResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+}
+
 interface GenerateComponentRequest {
   prompt: string;
   model: string;
@@ -13,25 +38,54 @@ interface OptimizeComponentRequest {
   model: string;
 }
 
-interface OpenRouterResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
-  }>;
-}
-
 // OpenRouter API service
 export class OpenRouterService {
   private apiKey: string;
   private baseUrl: string;
+  private defaultHeaders: Record<string, string>;
 
   constructor() {
     this.apiKey = process.env.OPENROUTER_API_KEY || '';
     this.baseUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+    this.defaultHeaders = {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'HTTP-Referer': 'https://figaroo.app',
+      'X-Title': 'Figaroo AI',
+      'Content-Type': 'application/json'
+    };
 
     if (!this.apiKey) {
       console.warn('⚠️  OpenRouter API key not found. Using fallback components.');
+    }
+  }
+
+  /**
+   * Makes a chat completion request to OpenRouter API
+   */
+  private async chatCompletion(request: OpenRouterRequest): Promise<OpenRouterResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: this.defaultHeaders,
+        body: JSON.stringify({
+          ...request,
+          temperature: request.temperature ?? 0.7,
+          max_tokens: request.max_tokens ?? 1000
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new ApiError(
+          `OpenRouter API error: ${response.status} - ${JSON.stringify(error)}`,
+          response.status
+        );
+      }
+
+      return await response.json() as OpenRouterResponse;
+    } catch (error) {
+      console.error('OpenRouter API call failed:', error);
+      throw error;
     }
   }
 
@@ -40,55 +94,55 @@ export class OpenRouterService {
     try {
       // If no API key, return fallback component
       if (!this.apiKey) {
-        return this.getFallbackComponent(request.prompt);
+        const fallback = this.getFallbackComponent(request.prompt);
+        return {
+          ...fallback,
+          isFallback: true,
+          error: 'API key not configured. Using fallback component.',
+          retryable: false
+        };
       }
 
       const systemPrompt = this.buildSystemPrompt(request.designSystem);
       
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://figaroo.app',
-          'X-Title': 'Figaroo AI Component Generator'
-        },
-        body: JSON.stringify({
-          model: request.model,
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt
-            },
-            {
-              role: 'user',
-              content: request.prompt
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.7
-        })
+      const response = await this.chatCompletion({
+        model: request.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: request.prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
       });
 
-      if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json() as OpenRouterResponse;
-      const content = data.choices[0]?.message?.content;
+      const content = response.choices[0]?.message?.content;
 
       if (!content) {
         throw new Error('No content received from AI service');
       }
 
       // Parse the AI response to extract HTML and CSS
-      return this.parseAIResponse(content);
+      const result = this.parseAIResponse(content);
+      return {
+        ...result,
+        isFallback: false
+      };
 
     } catch (error) {
       console.error('AI generation error:', error);
+      const errorObj = error as Error;
       
-      // Return fallback component on error
-      return this.getFallbackComponent(request.prompt);
+      // Determine if error is retryable
+      const isRetryable = this.isRetryableError(errorObj);
+      
+      // Generate fallback component on error
+      const fallbackResult = this.getFallbackComponent(request.prompt);
+      return {
+        ...fallbackResult,
+        isFallback: true,
+        error: this.getUserFriendlyError(errorObj),
+        retryable: isRetryable
+      };
     }
   }
 
@@ -104,37 +158,23 @@ export class OpenRouterService {
         request.optimizationType
       );
 
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://figaroo.app',
-          'X-Title': 'Figaroo AI Component Optimizer'
-        },
-        body: JSON.stringify({
-          model: request.model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an expert UI component optimizer. Improve the given component based on the optimization type requested.'
-            },
-            {
-              role: 'user',
-              content: optimizationPrompt
-            }
-          ],
-          max_tokens: 2000,
-          temperature: 0.5
-        })
+      const response = await this.chatCompletion({
+        model: request.model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert at optimizing UI components. Provide only the optimized code.'
+          },
+          {
+            role: 'user',
+            content: optimizationPrompt
+          }
+        ],
+        temperature: 0.5,
+        max_tokens: 2000
       });
 
-      if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json() as OpenRouterResponse;
-      const content = data.choices[0]?.message?.content;
+      const content = response.choices[0]?.message?.content;
 
       if (!content) {
         throw new Error('No content received from AI service');
@@ -209,6 +249,46 @@ Return the optimized component in the same format.`;
         raw: content
       };
     }
+  }
+
+  // Determine if error is retryable
+  private isRetryableError(error: Error): boolean {
+    const message = error.message.toLowerCase();
+    
+    // Non-retryable errors
+    const nonRetryablePatterns = [
+      'api key not configured',
+      'invalid api key',
+      'unauthorized',
+      'forbidden',
+      'rate limit exceeded',
+      'quota exceeded'
+    ];
+    
+    return !nonRetryablePatterns.some(pattern => message.includes(pattern));
+  }
+
+  // Get user-friendly error message
+  private getUserFriendlyError(error: Error): string {
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('network') || message.includes('fetch') || message.includes('timeout')) {
+      return 'Connection issue. Please check your internet and try again.';
+    }
+    
+    if (message.includes('api key') || message.includes('unauthorized') || message.includes('forbidden')) {
+      return 'API configuration issue. Please check your settings.';
+    }
+    
+    if (message.includes('rate limit') || message.includes('quota')) {
+      return 'Rate limit reached. Please wait a moment and try again.';
+    }
+    
+    if (message.includes('500') || message.includes('502') || message.includes('503')) {
+      return 'Service temporarily unavailable. Please try again.';
+    }
+    
+    return 'Something went wrong. Please try again.';
   }
 
   // Fallback component when API is unavailable

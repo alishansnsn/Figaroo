@@ -30,6 +30,7 @@ interface GeneratedComponentProps {
   onElementSelect?: (elementInfo: any) => void;
   onRename?: (id: string, newName: string) => void;
   autoResize?: boolean;
+  isFallback?: boolean;
 }
 
 type ResizeDirection = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
@@ -61,7 +62,8 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   onEditMode,
   onElementSelect,
   onRename,
-  autoResize = false
+  autoResize = false,
+  isFallback = false
 }) => {
   const [dragState, setDragState] = useState<DragState>({
     isDragging: false,
@@ -650,6 +652,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
             <div className="component-label" onClick={handleLabelClick}>
               <span className="component-icon">📱</span>
               {autoResize && <span className="auto-resize-indicator" title="Auto-resize enabled">🔄</span>}
+              {isFallback && <span className="fallback-indicator" title="Fallback component - AI service unavailable">⚠️</span>}
               {isRenaming ? (
                 <div className="inline-rename-container">
                   <input

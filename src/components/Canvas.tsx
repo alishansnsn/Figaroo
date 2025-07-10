@@ -6,6 +6,7 @@ import GeneratedComponent from './GeneratedComponent';
 import DesignSystemPopover from './DesignSystemPopover';
 import SettingsModal from './SettingsModal';
 import InspectorPanel from './InspectorPanel';
+import ErrorRetryBanner from './ErrorRetryBanner';
 import { aiService } from '../services/aiService';
 import { userService } from '../services/userService';
 import { ErrorHandler } from '../utils/errorHandler';
@@ -84,11 +85,25 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
     position: { x: number; y: number };
     size: { width: number; height: number };
     autoResize?: boolean;
+    isFallback?: boolean;
   }>>([]);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
   const [editingComponent, setEditingComponent] = useState<string | null>(null);
   const [editModeComponentId, setEditModeComponentId] = useState<string | null>(null);
   const [selectedElement, setSelectedElement] = useState<any>(null);
+  
+  // Error handling state
+  const [errorBanner, setErrorBanner] = useState<{
+    isVisible: boolean;
+    error?: string;
+    isFallback?: boolean;
+    retryable?: boolean;
+    lastPrompt?: string;
+  }>({
+    isVisible: false
+  });
+  const [isRetrying, setIsRetrying] = useState(false);
+  
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragStart = useRef({ x: 0, y: 0 });
   const colorPickerRef = useRef<HTMLDivElement>(null);
@@ -383,6 +398,9 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
     }
 
     try {
+      // Hide any existing error banner
+      setErrorBanner({ isVisible: false });
+      
       // Get user settings for AI service
       const userSettings = userService.getUserSettings();
       
@@ -398,6 +416,17 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
 
       const response = await aiService.generateComponent(generationRequest);
       
+      // Check if this is a fallback response
+      if (response.isFallback) {
+        setErrorBanner({
+          isVisible: true,
+          error: response.error,
+          isFallback: true,
+          retryable: response.retryable,
+          lastPrompt: prompt
+        });
+      }
+      
       // Combine HTML and CSS into a single code string
       const code = `${response.html}\n<style>\n${response.css}\n</style>`;
       
@@ -410,7 +439,8 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
           code,
           prompt,
           name: generateComponentName(prompt),
-          autoResize: false
+          autoResize: false,
+          isFallback: response.isFallback
         };
         
         // Update both store and local state
@@ -431,7 +461,8 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
           prompt,
           position: { x: 100, y: 100 },
           size: { width: 300, height: 200 },
-          autoResize: true
+          autoResize: true,
+          isFallback: response.isFallback
         };
         
         // Add to both store and local state
@@ -440,8 +471,43 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
         setSelectedComponentId(newComponent.id);
       }
     } catch (error) {
-      ErrorHandler.handleError(error as Error, 'component generation');
+      const errorObj = error as Error;
+      setErrorBanner({
+        isVisible: true,
+        error: errorObj.message,
+        isFallback: false,
+        retryable: true,
+        lastPrompt: prompt
+      });
+      ErrorHandler.handleError(errorObj, 'component generation');
     }
+  };
+
+  // Handle retry for failed AI generation
+  const handleRetryGeneration = async () => {
+    if (!errorBanner.lastPrompt || isRetrying) return;
+    
+    setIsRetrying(true);
+    try {
+      await handleGenerateComponent(errorBanner.lastPrompt);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  // Handle error banner dismiss
+  const handleErrorBannerDismiss = () => {
+    setErrorBanner({ isVisible: false });
+  };
+
+  // Handle error details view
+  const handleErrorDetails = () => {
+    const serviceStatus = aiService.getServiceStatus();
+    ErrorHandler.showInfo('AI Service Status', 
+      `Service Available: ${serviceStatus.isAvailable ? 'Yes' : 'No'}\n` +
+      `Retry Count: ${serviceStatus.retryCount}/${serviceStatus.maxRetries}\n` +
+      `Last Error: ${serviceStatus.lastError || 'None'}`
+    );
   };
 
   const handleEditComponent = (componentId: string) => {
@@ -702,6 +768,7 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
             onElementSelect={handleElementSelect}
             onRename={handleRenameComponent}
             autoResize={component.autoResize}
+            isFallback={component.isFallback}
           />
         ))}
       </div>
@@ -887,6 +954,18 @@ const Canvas: React.FC<CanvasProps> = ({ onToggleSidebar, isSidebarOpen }) => {
         onClose={() => setInspectorPanel(false)}
         selectedElement={selectedElement}
         onUpdateElement={handleElementUpdate}
+      />
+
+      {/* Error Retry Banner */}
+      <ErrorRetryBanner
+        isVisible={errorBanner.isVisible}
+        error={errorBanner.error}
+        isFallback={errorBanner.isFallback}
+        retryable={errorBanner.retryable}
+        isRetrying={isRetrying}
+        onRetry={handleRetryGeneration}
+        onDismiss={handleErrorBannerDismiss}
+        onViewDetails={handleErrorDetails}
       />
     </div>
   );

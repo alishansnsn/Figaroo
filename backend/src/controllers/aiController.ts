@@ -37,7 +37,10 @@ export const generateComponent = async (
         component: result,
         model,
         prompt,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isFallback: result.isFallback,
+        error: result.error,
+        retryable: result.retryable
       }
     });
 
